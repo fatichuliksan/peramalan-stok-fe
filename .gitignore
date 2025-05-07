@@ -16,7 +16,5 @@ yarn-error.log
 vuexy-shell-scripts
 .idea
 dist*/
-version
-info.json
 .vscode
 rawdata
