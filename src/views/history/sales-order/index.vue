@@ -14,7 +14,7 @@
     </div>
     <div class="vx-row mb-6" style="width: 50%">
       <div class="vx-col sm:w-1/3 w-full flex items-center">
-        <span>Item</span>
+        <span>SKU</span>
       </div>
       <div class="vx-col sm:w-2/3 w-full">
         <v-select
@@ -49,6 +49,9 @@
           color="primary"
           type="border"
           icon-pack="feather"
+          @click="() => {
+            draw ++;
+          }"
           >Show</vs-button
         >
       </div>
@@ -56,7 +59,13 @@
 
     <div class="vx-row">
       <div class="vx-col w-full mb-base">
-        <data-table></data-table>
+        <data-table
+        :warehouseCode="(selectedWarehouse)?selectedWarehouse.warehous_code:''"
+        :itemCode="(selectedItem)?selectedItem.item_code:''"
+        :dateStart="(period)?period[0]:null"
+        :dateEnd="(period)?period[1]:null"
+        :draw="draw"
+        />
       </div>
     </div>
   </vx-card>
@@ -124,6 +133,7 @@ export default {
           yearRange: "Select year range",
         },
       },
+      draw : 0,
     };
   },
   methods: {
@@ -278,6 +288,9 @@ export default {
       console.log(val);
     },
     selectedItem(val) {
+      console.log(val);
+    },
+    period(val) {
       console.log(val);
     },
   },

@@ -37,7 +37,7 @@
         >
           <!-- <logo class="w-10 mr-4 fill-current text-primary" /> -->
           <img style="max-width: 40px; max-height: auto" :src="urlLogo" />
-          <span class="vx-logo-text text">Peramalan Stok</span>
+          <span class="vx-logo-text text">Warehouse Stock Forcast</span>
         </router-link>
 
         <div class="mx-auto"></div>

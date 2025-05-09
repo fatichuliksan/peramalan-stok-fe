@@ -36,11 +36,11 @@
         </vs-dropdown>
       </template>
       <template slot="thead">
-        <vs-th sort-key="warehouse_code">Gudang</vs-th>
+        <vs-th sort-key="warehouse_code">Warehouse</vs-th>
         <vs-th sort-key="item_code">SKU</vs-th>
-        <vs-th sort-key="year">Tahun</vs-th>
-        <vs-th sort-key="month">Bulan</vs-th>
-        <vs-th sort-key="qty">Jumlah</vs-th>
+        <vs-th sort-key="year">Year</vs-th>
+        <vs-th sort-key="month">Month</vs-th>
+        <vs-th sort-key="qty">Quantity</vs-th>
       </template>
 
       <template slot-scope="{ data }">
@@ -76,37 +76,26 @@ import moment from "moment";
 export default {
   components: {},
   props: {
-    baseUrl: {
+    warehouseCode: {
       type: String,
     },
-    detail: {
-      type: Boolean,
-    },
-    territoryIDs: {
-      type: Array,
-    },
-    personalIDs: {
-      type: Array,
-    },
-    productTeamIDs: {
-      type: Array,
-    },
-    status: {
+    itemCode: {
       type: String,
     },
-    dateNow: {
+    dateStart: {
       type: Date,
+    },
+    dateEnd: {
+      type: Date,
+    },
+    draw: {
+      type: Number,
     },
   },
   data() {
     return {
       deleteId: null,
       table: this.tableDefaultState(),
-      checkedAll: false,
-      checked: [],
-      selectedRouteAssignments: [],
-      selectedRouteAssignmentIDs: [],
-      selectedRouteAssignmentCodes: [],
     };
   },
   methods: {
@@ -148,26 +137,21 @@ export default {
     getData() {
       this.$vs.loading();
       this.$http
-        .get("v1/main/history/sales-order-monthly", {
+        .get("v1/history/sales-order-monthly", {
           params: {
             length: this.table.length,
             page: this.table.page,
             search: this.table.search,
             order: this.table.order,
             sort: this.table.sort,
-            territory_ids: this.territoryIDs,
-            personal_ids: this.personalIDs,
-            product_team_ids: this.productTeamIDs,
-            status: this.status,
-            date: moment(this.dateNow).format("YYYY-MM-DD"),
+            warehouse_code: this.warehouseCode,
+            item_code: this.itemCode,
+            date_start: (this.dateStart)?moment(this.dateStart).format("YYYY-MM-DD"):null,
+            date_end: (this.dateEnd)?moment(this.dateEnd).endOf('month').format("YYYY-MM-DD"):null,
           },
         })
         .then((resp) => {
           if (resp.code == 200) {
-            this.checkedAll = false;
-            this.checked = [];
-            this.selectedRouteAssignments = [];
-
             this.table.total = resp.data.total_record;
             this.table.totalPage = resp.data.total_page;
             this.table.totalSearch = resp.data.total_record_search;
@@ -206,18 +190,15 @@ export default {
       this.table.start = valStart;
       this.table.end = valEnd;
     },
-    utcToLocal(val) {
-      if (val) {
-        return moment(val)
-          .add(-7, "h")
-          .utc()
-          .local()
-          .format("DD MMM YYYY HH:mm:ss");
+  },
+  mounted() {},
+  watch: {
+    draw: function (newVal, oldVal) {
+      if (newVal != oldVal) {
+        this.getData();
       }
     },
   },
-  mounted() {},
-  watch: {},
   computed: {
     setPage: {
       get() {

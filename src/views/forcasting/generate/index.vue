@@ -65,6 +65,7 @@
           color="primary"
           type="border"
           icon-pack="feather"
+          @click="postGenerate()"
           >Generate</vs-button
         >
       </div>
@@ -72,7 +73,49 @@
 
     <div class="vx-row">
       <div class="vx-col w-full mb-base">
-        <data-table></data-table>
+        <data-table
+        :dataGenerated="this.data"></data-table>
+      </div>
+    </div>
+    <div class="vx-row">
+      <div class="vx-col w-full mb-base">
+        <table width="50%">
+          <tr>
+            <td width="15%"><strong>Notes :</strong></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td width="15%">Actual</td>
+            <td>:</td>
+            <td>Actual data in month</td>
+          </tr>
+          <tr>
+            <td width="15%">S' S'' S'''</td>
+            <td>:</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td width="15%">a b c</td>
+            <td>:</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td width="15%">f</td>
+            <td>:</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td width="15%">e</td>
+            <td>:</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td width="15%">&Sigma;e</td>
+            <td>:</td>
+            <td></td>
+          </tr>
+        </table>
       </div>
     </div>
   </vx-card>
@@ -83,6 +126,7 @@ import DataTable from "./DataTable.vue";
 
 import DatePicker from "vue2-datepicker";
 import "vue2-datepicker/index.css";
+import moment from "moment";
 
 import _ from "lodash";
 import vSelect from "vue-select";
@@ -100,6 +144,7 @@ export default {
       optionItem: [],
       selectedItem: null,
       period: null,
+      data: [],
       lang: {
         // Customize your language here if needed
         days: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
@@ -139,24 +184,6 @@ export default {
     };
   },
   methods: {
-    customLabelTerritory({ code, name }) {
-      return `${code} ${name}`;
-    },
-    handleCreate() {
-      this.$router.push({
-        name: "route-assignment-create",
-        // params: { id: id },
-      });
-    },
-    handleImport() {
-      this.$router.push({
-        name: "route-assignment-import",
-        // params: { id: id },
-      });
-    },
-    handleOpen() {
-      this.detail = true;
-    },
     getWarehouse() {
       this.$vs.loading();
       this.$http
@@ -175,6 +202,7 @@ export default {
               });
 
               this.optionWarehouse = resp.data;
+              this.selectedWarehouse = resp.data[0];
             } else {
               this.optionWarehouse = [];
               this.selectedWarehouse = null;
@@ -203,7 +231,7 @@ export default {
               });
 
               this.optionItem = resp.data;
-              this.selectedItem = null;
+              this.selectedItem = resp.data[0];
             } else {
               this.optionItem = [];
               this.selectedItem = null;
@@ -214,72 +242,87 @@ export default {
           }
         });
     },
-    onSearchPersonal(search, loading) {
-      if (search.length) {
-        loading(true);
-        this.searchPersonal(loading, search, this);
+
+    postGenerate() {
+      if (!this.selectedWarehouse) {
+        this.$vs.notify({
+          title: "Error",
+          text: "Please select warehouse",
+          color: "danger",
+          iconPack: "feather",
+          icon: "icon-alert-triangle",
+        });
+        return;
       }
-    },
-    searchPersonal: _.debounce((loading, search, t) => {
-      var territorryIDs = [];
+      if (!this.selectedItem) {
+        this.$vs.notify({
+          title: "Error",
+          text: "Please select item",
+          color: "danger",
+          iconPack: "feather",
+          icon: "icon-alert-triangle",
+        });
+        return;
+      }
+      if (!this.period) {
+        this.$vs.notify({
+          title: "Error",
+          text: "Please select period",
+          color: "danger",
+          iconPack: "feather",
+          icon: "icon-alert-triangle",
+        });
+        return;
+      }
+      if (!this.alpha) {
+        this.$vs.notify({
+          title: "Error",
+          text: "Please input alpha",
+          color: "danger",
+          iconPack: "feather",
+          icon: "icon-alert-triangle",
+        });
+        return;
+      }
 
-      t.selectedTerritory.forEach((element) => {
-        territorryIDs.push(element.id);
-      });
-
-      t.$http
-        .get(t.baseUrl + "/sales2", {
-          params: {
-            length: 100,
-            search: search.trim(),
-            territory_ids: territorryIDs,
-          },
+      this.$vs.loading();
+      this.$http
+        .post("/v1/forcasting/generate", {
+          warehouse_code: this.selectedWarehouse
+            ? this.selectedWarehouse.warehouse_code
+            : "",
+          item_code: this.selectedItem ? this.selectedItem.item_code : "",
+          date_start: this.period
+            ? moment(this.period[0]).format("YYYY-MM-DD")
+            : null,
+          date_end: this.period
+            ? moment(this.period[1]).format("YYYY-MM-DD")
+            : null,
+          alpha: this.alpha,
         })
         .then((resp) => {
           if (resp.code == 200) {
-            if (resp.data.records) {
-              t.optionPersonal = resp.data.records;
-            } else {
-              t.optionPersonal = [];
-            }
-            loading(false);
+            this.data = resp.data;
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Success",
+              text: resp.message,
+              color: "success",
+              iconPack: "feather",
+              icon: "icon-check",
+            });
           } else {
-            t.optionPersonal = [];
-            loading(false);
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Error",
+              text: resp.message,
+              color: "danger",
+              iconPack: "feather",
+              icon: "icon-alert-triangle",
+            });
           }
         });
-    }, 350),
-    onSearchProductTeam(search, loading) {
-      if (search.length) {
-        loading(true);
-        this.searcProductTeam(loading, search, this);
-      }
     },
-    searcProductTeam: _.debounce((loading, search, t) => {
-      t.$http
-        .get(t.baseUrl + "/product-team", {
-          params: {
-            length: 100,
-            search: search.trim(),
-          },
-        })
-        .then((resp) => {
-          if (resp.code == 200) {
-            if (resp.data.records) {
-              resp.data.records.map(function (x) {
-                return (x.label = x.code + " " + x.name);
-              });
-              t.optionProductTeam = resp.data.records;
-            } else {
-              t.optionProductTeam = [];
-            }
-            loading(false);
-          } else {
-            t.optionProductTeam = [];
-            loading(false);
-          }
-        });
-    }, 350),
   },
   mounted() {
     this.getWarehouse();

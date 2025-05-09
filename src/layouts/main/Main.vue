@@ -19,7 +19,7 @@
   >
     <v-nav-menu
       :navMenuItems="navMenuItems"
-      title="Peramalan Stok"
+      title="Warehouse Stock Forcast"
       parent=".layout--main"
     />
 
@@ -171,7 +171,7 @@
         <p>
           <span>COPYRIGHT &copy;</span>
           <span>{{ new Date().getFullYear() }} </span>
-          <a href="#" target="_blank" rel="nofollow">Peramalan Stok</a>
+          <a href="#" target="_blank" rel="nofollow">Warehouse Stock Forcast</a>
           <span class="hidden sm:inline-block">, All rights Reserved</span>
         </p>
       </footer>

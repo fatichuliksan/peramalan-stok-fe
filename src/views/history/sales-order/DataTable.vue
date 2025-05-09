@@ -37,11 +37,11 @@
       </template>
       <template slot="thead">
         <vs-th sort-key="warehouse_code">Warehouse</vs-th>
-        <vs-th sort-key="sales_code">Sales</vs-th>
         <vs-th sort-key="posting_date">Date</vs-th>
+        <vs-th sort-key="sales_code">Sales</vs-th>
         <vs-th sort-key="customer_code">Customer</vs-th>
         <vs-th sort-key="item_code">SKU</vs-th>
-        <vs-th sort-key="detail">Quatiity</vs-th>
+        <vs-th sort-key="detail">Quantity</vs-th>
       </template>
 
       <template slot-scope="{ data }">
@@ -50,14 +50,13 @@
             {{ data[indextr].warehouse_code }}
             {{ data[indextr].warehouse_name }}
           </vs-td>
+          <vs-td :data="data[indextr].posting_date">
+            {{ data[indextr].posting_date }}
+          </vs-td>
           <vs-td :data="data[indextr].sales_code">
             {{ data[indextr].sales_code }}
             {{ data[indextr].sales_name }}
           </vs-td>
-          <vs-td :data="data[indextr].posting_date">
-            {{ data[indextr].posting_date }}
-          </vs-td>
-
           <vs-td :data="data[indextr].customer_code">
             {{ data[indextr].customer_code }}
             {{ data[indextr].customer_name }}
@@ -85,37 +84,25 @@ import moment from "moment";
 export default {
   components: {},
   props: {
-    baseUrl: {
+    warehouseCode: {
       type: String,
     },
-    detail: {
-      type: Boolean,
-    },
-    territoryIDs: {
-      type: Array,
-    },
-    personalIDs: {
-      type: Array,
-    },
-    productTeamIDs: {
-      type: Array,
-    },
-    status: {
+    itemCode: {
       type: String,
     },
-    dateNow: {
+    dateStart: {
       type: Date,
+    },
+    dateEnd: {
+      type: Date,
+    },
+    draw: {
+      type: Number,
     },
   },
   data() {
     return {
-      deleteId: null,
       table: this.tableDefaultState(),
-      checkedAll: false,
-      checked: [],
-      selectedRouteAssignments: [],
-      selectedRouteAssignmentIDs: [],
-      selectedRouteAssignmentCodes: [],
     };
   },
   methods: {
@@ -125,7 +112,7 @@ export default {
         length: 10,
         page: 1,
         search: "",
-        order: "id",
+        order: "warehouse_code",
         sort: "desc",
         total: 0,
         totalPage: 1,
@@ -157,26 +144,21 @@ export default {
     getData() {
       this.$vs.loading();
       this.$http
-        .get("v1/main/history/sales-order", {
+        .get("v1/history/sales-order", {
           params: {
             length: this.table.length,
             page: this.table.page,
             search: this.table.search,
             order: this.table.order,
             sort: this.table.sort,
-            territory_ids: this.territoryIDs,
-            personal_ids: this.personalIDs,
-            product_team_ids: this.productTeamIDs,
-            status: this.status,
-            date: moment(this.dateNow).format("YYYY-MM-DD"),
+            warehouse_code: this.warehouseCode,
+            item_code: this.itemCode,
+            date_start: (this.dateStart)?moment(this.dateStart).format("YYYY-MM-DD"):null,
+            date_end: (this.dateEnd)?moment(this.dateEnd).endOf('month').format("YYYY-MM-DD"):null,
           },
         })
         .then((resp) => {
           if (resp.code == 200) {
-            this.checkedAll = false;
-            this.checked = [];
-            this.selectedRouteAssignments = [];
-
             this.table.total = resp.data.total_record;
             this.table.totalPage = resp.data.total_page;
             this.table.totalSearch = resp.data.total_record_search;
@@ -189,11 +171,44 @@ export default {
           }
         });
     },
+
+    setStartEnd() {
+      let valStart =
+        this.table.length * this.table.page - this.table.length + 1;
+
+      if (valStart > this.table.total) {
+        valStart = 1;
+      }
+      if (this.table.total == 0) {
+        valStart = 0;
+      }
+      let valEnd = this.table.length * this.table.page;
+
+      if (valEnd > this.table.total) {
+        valEnd = this.table.total;
+      }
+
+      if (
+        this.table.totalSearch < this.table.total &&
+        this.table.search != ""
+      ) {
+        valEnd = this.table.totalSearch;
+      }
+
+      this.table.start = valStart;
+      this.table.end = valEnd;
+    },
   },
   mounted() {
     this.getData();
   },
-  watch: {},
+  watch: {
+    draw: function (newVal, oldVal) {
+      if (newVal != oldVal) {
+        this.getData();
+      }
+    },
+  },
   computed: {
     setPage: {
       get() {
