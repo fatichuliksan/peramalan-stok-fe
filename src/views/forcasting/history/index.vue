@@ -1,5 +1,5 @@
 <template>
-  <vx-card title="Generate History">
+  <vx-card title="History">
     <div class="vx-row mb-6" style="width: 50%">
       <div class="vx-col sm:w-1/3 w-full flex items-center">
         <span>Warehouse</span>
@@ -24,6 +24,21 @@
         />
       </div>
     </div>
+    <div class="vx-row mb-6" style="width: 50%">
+      <div class="vx-col sm:w-1/3 w-full flex items-center">
+        <span>Periode</span>
+      </div>
+      <div class="vx-col sm:w-2/3 w-full">
+        <date-picker
+          v-model="period"
+          range
+          type="month"
+          format="MMM YYYY"
+          placeholder="Pilih periode bulan"
+          :lang="lang"
+        ></date-picker>
+      </div>
+    </div>
 
     <div class="vx-row mb-6" style="width: 50%">
       <div class="vx-col sm:w-1/3 w-full flex items-center"></div>
@@ -33,6 +48,11 @@
           color="primary"
           type="border"
           icon-pack="feather"
+          @click="
+            () => {
+              draw++;
+            }
+          "
           >Show</vs-button
         >
       </div>
@@ -42,7 +62,15 @@
       <div class="vx-col w-full mb-base">
         <vs-tabs :value="active">
           <vs-tab label="History">
-            <data-table></data-table>
+            <data-table
+              :warehouseCode="
+                selectedWarehouse ? selectedWarehouse.warehouse_code : ''
+              "
+              :itemCode="selectedItem ? selectedItem.item_code : ''"
+              :dateStart="period ? period[0] : null"
+              :dateEnd="period ? period[1] : null"
+              :draw="draw"
+            />
           </vs-tab>
           <vs-tab label="Detail">
             <data-table-detail></data-table-detail>
@@ -71,12 +99,13 @@ export default {
   },
   data() {
     return {
-      alpha: 0.5,
+      active: 0,
       optionWarehouse: [],
       selectedWarehouse: null,
       optionItem: [],
       selectedItem: null,
       period: null,
+      draw: 0,
       lang: {
         // Customize your language here if needed
         days: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
@@ -116,9 +145,6 @@ export default {
     };
   },
   methods: {
-    customLabelTerritory({ code, name }) {
-      return `${code} ${name}`;
-    },
     handleCreate() {
       this.$router.push({
         name: "route-assignment-create",
@@ -152,6 +178,7 @@ export default {
               });
 
               this.optionWarehouse = resp.data;
+              this.selectedWarehouse = resp.data[0];
             } else {
               this.optionWarehouse = [];
               this.selectedWarehouse = null;
@@ -180,7 +207,7 @@ export default {
               });
 
               this.optionItem = resp.data;
-              this.selectedItem = null;
+              this.selectedItem = resp.data[0];
             } else {
               this.optionItem = [];
               this.selectedItem = null;
@@ -191,72 +218,6 @@ export default {
           }
         });
     },
-    onSearchPersonal(search, loading) {
-      if (search.length) {
-        loading(true);
-        this.searchPersonal(loading, search, this);
-      }
-    },
-    searchPersonal: _.debounce((loading, search, t) => {
-      var territorryIDs = [];
-
-      t.selectedTerritory.forEach((element) => {
-        territorryIDs.push(element.id);
-      });
-
-      t.$http
-        .get(t.baseUrl + "/sales2", {
-          params: {
-            length: 100,
-            search: search.trim(),
-            territory_ids: territorryIDs,
-          },
-        })
-        .then((resp) => {
-          if (resp.code == 200) {
-            if (resp.data.records) {
-              t.optionPersonal = resp.data.records;
-            } else {
-              t.optionPersonal = [];
-            }
-            loading(false);
-          } else {
-            t.optionPersonal = [];
-            loading(false);
-          }
-        });
-    }, 350),
-    onSearchProductTeam(search, loading) {
-      if (search.length) {
-        loading(true);
-        this.searcProductTeam(loading, search, this);
-      }
-    },
-    searcProductTeam: _.debounce((loading, search, t) => {
-      t.$http
-        .get(t.baseUrl + "/product-team", {
-          params: {
-            length: 100,
-            search: search.trim(),
-          },
-        })
-        .then((resp) => {
-          if (resp.code == 200) {
-            if (resp.data.records) {
-              resp.data.records.map(function (x) {
-                return (x.label = x.code + " " + x.name);
-              });
-              t.optionProductTeam = resp.data.records;
-            } else {
-              t.optionProductTeam = [];
-            }
-            loading(false);
-          } else {
-            t.optionProductTeam = [];
-            loading(false);
-          }
-        });
-    }, 350),
   },
   mounted() {
     this.getWarehouse();

@@ -73,47 +73,150 @@
 
     <div class="vx-row">
       <div class="vx-col w-full mb-base">
-        <data-table
-        :dataGenerated="this.data"></data-table>
+        <data-table :dataGenerated="this.generateLines"></data-table>
+      </div>
+    </div>
+
+    <div class="vx-row">
+      <div class="vx-col w-full mb-base">
+        <table class="vs-table" width="100%">
+          <tr>
+            <td width="15%">MAPE</td>
+            <td>:</td>
+            <td>{{ mape.toFixed(2) }} %</td>
+          </tr>
+          <tr>
+            <td width="15%">MAPE Criteria</td>
+            <td>:</td>
+            <td>
+              <span>{{ mapeCriteria }}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="vx-row">
+      <div class="vx-col w-full mb-base">
+        <vs-table  :data="this.forcastLines">
+          <template slot="thead">
+            <vs-th>Period (t)</vs-th>
+            <vs-th>Forcast (f)</vs-th>
+          </template>
+          <template slot-scope="{ data }">
+            <vs-tr
+              :data="tr"
+              :key="indextr"
+              v-for="(tr, indextr) in data"
+            >
+              <vs-td :data="data[indextr].t">
+                {{ data[indextr].t }}
+              </vs-td>
+              <vs-td :data="data[indextr].f">
+                {{ data[indextr].f.toFixed(2) }}
+              </vs-td>
+            </vs-tr>
+          </template>
+        </vs-table>
+      </div>
+    </div>
+
+    <div class="vx-row">
+      <div class="vx-col w-full mb-base text-center">
+        <vs-button
+          class="mt-2 mr-1"
+          color="success"
+          type="border"
+          icon-pack="feather"
+          @click="save()"
+          >Save</vs-button
+        >
+        <vs-button
+          class="ml-1 mt-2"
+          color="danger"
+          type="border"
+          icon-pack="refresh-cw"
+          @click="reset()"
+          >Reset</vs-button
+        >
       </div>
     </div>
     <div class="vx-row">
       <div class="vx-col w-full mb-base">
-        <table width="50%">
+        <table width="100%">
           <tr>
-            <td width="15%"><strong>Notes :</strong></td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td width="15%">Actual</td>
-            <td>:</td>
-            <td>Actual data in month</td>
-          </tr>
-          <tr>
-            <td width="15%">S' S'' S'''</td>
-            <td>:</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td width="15%">a b c</td>
-            <td>:</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td width="15%">f</td>
-            <td>:</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td width="15%">e</td>
-            <td>:</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td width="15%">&Sigma;e</td>
-            <td>:</td>
-            <td></td>
+            <td>
+              <table width="50%">
+                <tr>
+                  <td width="15%"><strong>Notes :</strong></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td width="15%">Actual</td>
+                  <td>:</td>
+                  <td>Actual data in month</td>
+                </tr>
+                <tr>
+                  <td width="15%">S' S'' S'''</td>
+                  <td>:</td>
+                  <td>Single, double, triple smoothing</td>
+                </tr>
+                <tr>
+                  <td width="15%">a</td>
+                  <td>:</td>
+                  <td>total all smoothing</td>
+                </tr>
+
+                <tr>
+                  <td width="15%">b c</td>
+                  <td>:</td>
+                  <td>trend paramter</td>
+                </tr>
+                <tr>
+                  <td width="15%">f</td>
+                  <td>:</td>
+                  <td>forcast result</td>
+                </tr>
+                <tr>
+                  <td width="15%">e</td>
+                  <td>:</td>
+                  <td>error value</td>
+                </tr>
+                <tr>
+                  <td width="15%">&Sigma;e</td>
+                  <td>:</td>
+                  <td>error sum</td>
+                </tr>
+              </table>
+            </td>
+            <td>
+              <table>
+                <tr>
+                  <td><strong>MAPE Criteria :</strong></td>
+                </tr>
+                <tr>
+                  <td>Highly Accurate</td>
+                  <td>:</td>
+                  <td>0% - 10%</td>
+                </tr>
+                <tr>
+                  <td>Accurate</td>
+                  <td>:</td>
+                  <td>10% - 20%</td>
+                </tr>
+                <tr>
+                  <td>Less Accurate</td>
+                  <td>:</td>
+                  <td>20% - 50%</td>
+                </tr>
+                <tr>
+                  <td>Inaccurate</td>
+                  <td>:</td>
+                  <td>> 50%</td>
+                </tr>
+              </table>
+            </td>
           </tr>
         </table>
       </div>
@@ -144,7 +247,11 @@ export default {
       optionItem: [],
       selectedItem: null,
       period: null,
-      data: [],
+      generateLines: [],
+      forcastLines: [],
+      forcastPeriod: 0,
+      mape: 0,
+      mapeCriteria: "",
       lang: {
         // Customize your language here if needed
         days: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
@@ -298,11 +405,78 @@ export default {
           date_end: this.period
             ? moment(this.period[1]).format("YYYY-MM-DD")
             : null,
-          alpha: this.alpha,
+          alpha: parseFloat(this.alpha),
         })
         .then((resp) => {
           if (resp.code == 200) {
-            this.data = resp.data;
+            this.generateLines = resp.data.generate_lines;
+            this.forcastLines = resp.data.forcast_lines;
+            this.forcastPeriod = resp.data.forcast_period;
+            this.mape = resp.data.mape;
+            this.mapeCriteria = resp.data.mape_criteria;
+
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Success",
+              text: resp.message,
+              color: "success",
+              iconPack: "feather",
+              icon: "icon-check",
+            });
+          } else {
+            this.$vs.loading.close();
+            this.$vs.notify({
+              title: "Error",
+              text: resp.message,
+              color: "danger",
+              iconPack: "feather",
+              icon: "icon-alert-triangle",
+            });
+          }
+        });
+    },
+    reset() {
+      this.data = [];
+    },
+    save() {
+      if (this.generateLines.length == 0) {
+        this.$vs.notify({
+          title: "Error",
+          text: "Please generate data first",
+          color: "danger",
+          iconPack: "feather",
+          icon: "icon-alert-triangle",
+        });
+        return;
+      }
+
+      this.$vs.loading();
+
+      this.$http
+        .post("/v1/forcasting/history", {
+          warehouse_code: this.selectedWarehouse
+            ? this.selectedWarehouse.warehouse_code
+            : "",
+          warehouse_name: this.selectedWarehouse
+            ? this.selectedWarehouse.warehouse_name
+            : "",
+          item_code: this.selectedItem ? this.selectedItem.item_code : "",
+          item_name: this.selectedItem ? this.selectedItem.item_name : "",
+          date_start: this.period
+            ? moment(this.period[0]).format("YYYY-MM-DD")
+            : null,
+          date_end: this.period
+            ? moment(this.period[1]).endOf("month").format("YYYY-MM-DD")
+            : null,
+          alpha: parseFloat(this.alpha),
+          generate_lines: this.generateLines,
+          forcast_lines: this.forcastLines,
+          forcast_period: this.forcastPeriod,
+          mape: this.mape,
+          mape_criteria: this.mapeCriteria,
+        })
+        .then((resp) => {
+          if (resp.code == 200) {
             this.$vs.loading.close();
             this.$vs.notify({
               title: "Success",

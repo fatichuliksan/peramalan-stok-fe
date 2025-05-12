@@ -9,11 +9,12 @@
       <template slot="thead">
         <vs-th sort-key="warehouse_code">Warehouse</vs-th>
         <vs-th sort-key="item_code">Item</vs-th>
-        <vs-th sort-key="year">Period</vs-th>
-        <vs-th sort-key="month">Alpha</vs-th>
-        <vs-th sort-key="month">Forcast</vs-th>
-        <vs-th sort-key="month">MAPE</vs-th>
-        <vs-th sort-key="month">Generate At</vs-th>
+        <vs-th sort-key="date_start">Period</vs-th>
+        <vs-th sort-key="alpha">Alpha</vs-th>
+        <vs-th sort-key="mape">MAPE</vs-th>
+        <vs-th sort-key="mape_criteria">MAPE Criteria</vs-th>
+        <vs-th sort-key="created_at">Generate At</vs-th>
+        <vs-th >Action</vs-th>
       </template>
 
       <template slot-scope="{ data }">
@@ -22,25 +23,43 @@
             {{ data[indextr].warehouse_code }}
             {{ data[indextr].warehouse_name }}
           </vs-td>
-          <vs-td :data="data[indextr].sales_code">
-            {{ data[indextr].sales_code }}
-            {{ data[indextr].sales_name }}
-          </vs-td>
-          <vs-td :data="data[indextr].posting_date">
-            {{ data[indextr].posting_date }}
-          </vs-td>
-
-          <vs-td :data="data[indextr].customer_code">
-            {{ data[indextr].customer_code }}
-            {{ data[indextr].customer_name }}
-          </vs-td>
           <vs-td :data="data[indextr].item_code">
             {{ data[indextr].item_code }}
             {{ data[indextr].item_name }}
           </vs-td>
-          <vs-td :data="data[indextr].quantity">
-            {{ data[indextr].quantity }}
-            {{ data[indextr].item_unit }}
+          <vs-td :data="data[indextr].date_start">
+            {{ data[indextr].date_start }} -
+            {{ data[indextr].date_end }}
+          </vs-td>
+          <vs-td :data="data[indextr].alpha">
+            {{ data[indextr].alpha }}
+          </vs-td>
+
+          <vs-td :data="data[indextr].mape">
+            {{ data[indextr].mape.toFixed(2) }} %
+          </vs-td>
+          <vs-td :data="data[indextr].mape_criteria">
+            {{ data[indextr].mape_criteria }}
+          </vs-td>
+          <vs-td :data="data[indextr].created_at">
+            {{ data[indextr].created_at }}
+          </vs-td>
+          <vs-td :data="data[indextr].id">
+            <vs-button
+              @click="$emit('edit', data[indextr])"
+              icon="list"
+              color="success"
+              size="small"
+              title="Detail"
+            ></vs-button>
+
+            <vs-button
+              @click="deleteId = data[indextr].id"
+              icon="delete"
+              color="danger"
+              size="small"
+              title="Delete"
+            ></vs-button>
           </vs-td>
         </vs-tr>
       </template>
@@ -52,37 +71,26 @@ import moment from "moment";
 export default {
   components: {},
   props: {
-    baseUrl: {
+    warehouseCode: {
       type: String,
     },
-    detail: {
-      type: Boolean,
-    },
-    territoryIDs: {
-      type: Array,
-    },
-    personalIDs: {
-      type: Array,
-    },
-    productTeamIDs: {
-      type: Array,
-    },
-    status: {
+    itemCode: {
       type: String,
-    },
-    dateNow: {
+    }, 
+    dateStart: {
       type: Date,
+    },
+    dateEnd: {
+      type: Date,
+    },
+    draw: {
+      type: Number,
     },
   },
   data() {
     return {
       deleteId: null,
       table: this.tableDefaultState(),
-      checkedAll: false,
-      checked: [],
-      selectedRouteAssignments: [],
-      selectedRouteAssignmentIDs: [],
-      selectedRouteAssignmentCodes: [],
     };
   },
   methods: {
@@ -106,26 +114,22 @@ export default {
     getData() {
       this.$vs.loading();
       this.$http
-        .get("v1/main/history/sales-order", {
+        .get("v1/forcasting/history", {
           params: {
             length: this.table.length,
             page: this.table.page,
             search: this.table.search,
             order: this.table.order,
             sort: this.table.sort,
-            territory_ids: this.territoryIDs,
-            personal_ids: this.personalIDs,
-            product_team_ids: this.productTeamIDs,
-            status: this.status,
-            date: moment(this.dateNow).format("YYYY-MM-DD"),
+            warehouse_code: this.warehouseCode,
+            item_code: this.itemCode,
+            date_start: (this.dateStart)?moment(this.dateStart).format("YYYY-MM-DD"):null,
+            date_end: (this.dateEnd)?moment(this.dateEnd).endOf('month').format("YYYY-MM-DD"):null,
           },
         })
         .then((resp) => {
           if (resp.code == 200) {
-            this.checkedAll = false;
-            this.checked = [];
-            this.selectedRouteAssignments = [];
-
+            this.table.data = resp.data.records;
             this.table.total = resp.data.total_record;
             this.table.totalPage = resp.data.total_page;
             this.table.totalSearch = resp.data.total_record_search;
@@ -138,9 +142,42 @@ export default {
           }
         });
     },
+    setStartEnd() {
+      let valStart =
+        this.table.length * this.table.page - this.table.length + 1;
+
+      if (valStart > this.table.total) {
+        valStart = 1;
+      }
+      if (this.table.total == 0) {
+        valStart = 0;
+      }
+      let valEnd = this.table.length * this.table.page;
+
+      if (valEnd > this.table.total) {
+        valEnd = this.table.total;
+      }
+
+      if (
+        this.table.totalSearch < this.table.total &&
+        this.table.search != ""
+      ) {
+        valEnd = this.table.totalSearch;
+      }
+
+      this.table.start = valStart;
+      this.table.end = valEnd;
+    },
   },
   mounted() {},
-  watch: {},
+  watch: {
+    draw: function (newVal, oldVal) {
+      if (newVal != oldVal) {
+        console.log("draw", newVal);
+        this.getData();
+      }
+    },
+  },
   computed: {},
 };
 </script>

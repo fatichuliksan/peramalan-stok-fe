@@ -4,20 +4,20 @@
       :data="this.data"
     >
       <template slot="thead">
-        <vs-th sort-key="warehouse_code">Warehouse</vs-th>
-        <vs-th sort-key="item_code">Item</vs-th>
-        <vs-th sort-key="year">Year</vs-th>
-        <vs-th sort-key="month">Month</vs-th>
-        <vs-th sort-key="month">Actual</vs-th>
-        <vs-th sort-key="month">S'</vs-th>
-        <vs-th sort-key="month">S''</vs-th>
-        <vs-th sort-key="month">S'''</vs-th>
-        <vs-th sort-key="month">a</vs-th>
-        <vs-th sort-key="month">b</vs-th>
-        <vs-th sort-key="month">c</vs-th>
-        <vs-th sort-key="month">f</vs-th>
-        <vs-th sort-key="month">e</vs-th>
-        <vs-th sort-key="month">&Sigma;e</vs-th>
+        <vs-th>Warehouse</vs-th>
+        <vs-th>Item</vs-th>
+        <vs-th>Year</vs-th>
+        <vs-th>Month</vs-th>
+        <vs-th>Actual</vs-th>
+        <vs-th>S'</vs-th>
+        <vs-th>S''</vs-th>
+        <vs-th>S'''</vs-th>
+        <vs-th>a</vs-th>
+        <vs-th>b</vs-th>
+        <vs-th>c</vs-th>
+        <vs-th>f</vs-th>
+        <vs-th>e</vs-th>
+        <vs-th>&Sigma;e</vs-th>
       </template>
 
       <template slot-scope="{ data }">
@@ -49,7 +49,7 @@
           <vs-td :data="data[indextr].c">
             {{ data[indextr].c.toFixed(2) }}</vs-td>
           <vs-td :data="data[indextr].f">
-            {{ data[indextr].f1.toFixed(2) }}</vs-td>
+            {{ data[indextr].f.toFixed(2) }}</vs-td>
           <vs-td :data="data[indextr].e">
             {{ data[indextr].e.toFixed(2) }}</vs-td>
           <vs-td :data="data[indextr].e_sig">
