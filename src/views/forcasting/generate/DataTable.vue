@@ -2,6 +2,8 @@
   <div>
     <vs-table
       :data="this.data"
+      stripe
+      border
     >
       <template slot="thead">
         <vs-th>Warehouse</vs-th>

@@ -70,10 +70,12 @@
               :dateStart="period ? period[0] : null"
               :dateEnd="period ? period[1] : null"
               :draw="draw"
+
+              @handleDetail="handleDetail"
             />
           </vs-tab>
-          <vs-tab label="Detail">
-            <data-table-detail></data-table-detail>
+          <vs-tab label="Detail"  :value="active">
+            <data-table-detail :data="detailData"></data-table-detail>
           </vs-tab>
         </vs-tabs>
       </div>
@@ -106,6 +108,7 @@ export default {
       selectedItem: null,
       period: null,
       draw: 0,
+      detailData: null,
       lang: {
         // Customize your language here if needed
         days: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
@@ -145,21 +148,6 @@ export default {
     };
   },
   methods: {
-    handleCreate() {
-      this.$router.push({
-        name: "route-assignment-create",
-        // params: { id: id },
-      });
-    },
-    handleImport() {
-      this.$router.push({
-        name: "route-assignment-import",
-        // params: { id: id },
-      });
-    },
-    handleOpen() {
-      this.detail = true;
-    },
     getWarehouse() {
       this.$vs.loading();
       this.$http
@@ -217,6 +205,10 @@ export default {
             this.$vs.loading.close();
           }
         });
+    },
+    handleDetail(data) {
+      this.active = 1;
+      this.detailData = data;
     },
   },
   mounted() {

@@ -5,6 +5,9 @@
       :data="table.data"
       :max-items="table.length"
       :total="table.total"
+      @search="handleSearch"
+      @change-page="handleChangePage"
+      @sort="handleSort"
     >
       <template slot="thead">
         <vs-th sort-key="warehouse_code">Warehouse</vs-th>
@@ -46,7 +49,7 @@
           </vs-td>
           <vs-td :data="data[indextr].id">
             <vs-button
-              @click="$emit('edit', data[indextr])"
+              @click="$emit('handleDetail', data[indextr])"
               icon="list"
               color="success"
               size="small"
@@ -54,7 +57,7 @@
             ></vs-button>
 
             <vs-button
-              @click="deleteId = data[indextr].id"
+              @click="handleDelete(data[indextr].id)"
               icon="delete"
               color="danger"
               size="small"
@@ -110,7 +113,25 @@ export default {
         end: 0,
       };
     },
-
+    handleSearch(searching) {
+      this.table.search = searching;
+      this.table.page = 1;
+      this.getData();
+    },
+    handleChangePage(page) {
+      this.table.page = page;
+      this.getData();
+    },
+    handleSort(key, active) {
+      this.table.order = key;
+      this.table.sort = active;
+      this.getData();
+    },
+    handleChangelength(val) {
+      this.table.length = val == "All" ? this.table.total : val;
+      this.table.page = 1;
+      this.getData();
+    },
     getData() {
       this.$vs.loading();
       this.$http
@@ -167,6 +188,52 @@ export default {
 
       this.table.start = valStart;
       this.table.end = valEnd;
+    },
+    handleDelete(id) {
+      this.deleteId = id;
+      this.$vs.dialog({
+        type: "confirm",
+        color: "danger",
+        title: `Confirm`,
+        text: "Please confirm to delete this data",
+        accept: this.acceptDelete,
+      });
+    },
+    acceptDelete() {
+      this.$vs.loading();
+      this.$http
+        .delete("v1/forcasting/history", {
+          params: {
+            id: this.deleteId,
+          },
+        })
+        .then((resp) => {
+          this.$vs.loading.close();
+          if (resp.code == 200) {
+            this.$vs.notify({
+              color: "success",
+              title: "Success",
+              text: resp.message,
+              position: "top-right",
+              iconPack: "feather",
+              icon: "icon-x-circle",
+            });
+          } else {
+            this.$vs.notify({
+              color: "danger",
+              title: "Error",
+              text: resp.message,
+              position: "top-right",
+              iconPack: "feather",
+              icon: "icon-x-circle",
+            });
+          }
+          this.getData();
+        })
+        .catch((error) => {
+          this.$vs.loading.close();
+          console.log(error);
+        });
     },
   },
   mounted() {},
