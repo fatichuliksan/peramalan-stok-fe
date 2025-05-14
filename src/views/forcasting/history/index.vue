@@ -80,6 +80,7 @@
         </vs-tabs>
       </div>
     </div>
+
   </vx-card>
 </template>
 <script>
@@ -92,6 +93,7 @@ import "vue2-datepicker/index.css";
 
 import _ from "lodash";
 import vSelect from "vue-select";
+
 export default {
   components: {
     DatePicker,
@@ -145,6 +147,7 @@ export default {
           yearRange: "Select year range",
         },
       },
+    
     };
   },
   methods: {

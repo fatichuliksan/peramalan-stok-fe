@@ -49,9 +49,11 @@
           color="primary"
           type="border"
           icon-pack="feather"
-          @click="() => {
-            draw++;
-          }"
+          @click="
+            () => {
+              draw++;
+            }
+          "
           >Show</vs-button
         >
       </div>
@@ -60,11 +62,26 @@
     <div class="vx-row">
       <div class="vx-col w-full mb-base">
         <data-table
-        :warehouseCode="(selectedWarehouse)?selectedWarehouse.warehous_code:''"
-        :itemCode="(selectedItem)?selectedItem.item_code:''"
-        :dateStart="(period)?period[0]:null"
-        :dateEnd="(period)?period[1]:null"
-        :draw="draw"/>
+          :warehouseCode="
+            selectedWarehouse ? selectedWarehouse.warehouse_code : ''
+          "
+          :itemCode="selectedItem ? selectedItem.item_code : ''"
+          :dateStart="period ? period[0] : null"
+          :dateEnd="period ? period[1] : null"
+          :draw="draw"
+        />
+      </div>
+    </div>
+
+    <div class="vx-row">
+      <div class="vx-col w-full mb-base">
+        <e-charts
+          autoresize
+          :options="line"
+          theme="ovilia-green"
+          ref="line"
+          auto-resize
+        />
       </div>
     </div>
   </vx-card>
@@ -78,11 +95,22 @@ import "vue2-datepicker/index.css";
 
 import _ from "lodash";
 import vSelect from "vue-select";
+
+import ECharts from "vue-echarts/components/ECharts";
+import "echarts/lib/component/tooltip";
+import "echarts/lib/component/legend";
+import "echarts/lib/chart/line";
+import theme from "./theme.json";
+
+import moment from "moment";
+
+ECharts.registerTheme("ovilia-green", theme);
 export default {
   components: {
     DatePicker,
     vSelect,
     DataTable,
+    ECharts,
   },
   data() {
     return {
@@ -130,6 +158,28 @@ export default {
           year: "Select year",
           yearRange: "Select year range",
         },
+      },
+      line: {
+        // Make gradient line here
+        visualMap: [
+          {
+            show: false,
+            type: "continuous",
+            seriesIndex: 0,
+            min: 0,
+            max: 400,
+          },
+        ],
+        tooltip: {
+          trigger: "axis",
+        },
+        xAxis: {
+          data: [],
+        },
+        yAxis: {
+          splitLine: { show: false },
+        },
+        series: [],
       },
     };
   },
@@ -192,18 +242,48 @@ export default {
           }
         });
     },
-  
+    getChartData() {
+      this.$vs.loading();
+      this.$http
+        .get("/v1/history/sales-order-monthly-chart", {
+          params: {
+            warehouse_code: (this.selectedWarehouse)?this.selectedWarehouse.warehouse_code:"",
+            item_code:(this.selectedItem)? this.selectedItem.item_code:"",
+            date_start: this.period
+              ? moment(this.period[0]).format("YYYY-MM-DD")
+              : null,
+            date_end: this.period
+              ? moment(this.period[1]).endOf("month").format("YYYY-MM-DD")
+              : null,
+          },
+        })
+        .then((resp) => {
+          if (resp.code == 200) {
+            if (resp.data) {
+              this.line.xAxis.data = resp.data.labels;
+              resp.data.charts.forEach((x) => {
+                 this.line.series.push(x);
+              });
+
+            } else {
+              this.line.xAxis.data = [];
+              this.line.series[0].data = [];
+            }
+            this.$vs.loading.close();
+          } else {
+            this.$vs.loading.close();
+          }
+        });
+    },
   },
   mounted() {
     this.getWarehouse();
     this.getItem();
   },
   watch: {
-    selectedWarehouse(val) {
-      console.log(val);
-    },
-    selectedItem(val) {
-      console.log(val);
+    draw(data) {
+      console.log("draw", data);
+      this.getChartData();
     },
   },
 };

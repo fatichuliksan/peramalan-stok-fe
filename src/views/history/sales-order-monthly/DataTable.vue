@@ -105,7 +105,7 @@ export default {
         length: 10,
         page: 1,
         search: "",
-        order: "id",
+        order: "warehouse_code",
         sort: "desc",
         total: 0,
         totalPage: 1,
