@@ -244,11 +244,35 @@ export default {
     },
     getChartData() {
       this.$vs.loading();
+      this.line = {
+        // Make gradient line here
+        visualMap: [
+          {
+            show: false,
+            type: "continuous",
+            seriesIndex: 0,
+            min: 0,
+            max: 400,
+          },
+        ],
+        tooltip: {
+          trigger: "axis",
+        },
+        xAxis: {
+          data: [],
+        },
+        yAxis: {
+          splitLine: { show: false },
+        },
+        series: [],
+      };
       this.$http
         .get("/v1/history/sales-order-monthly-chart", {
           params: {
-            warehouse_code: (this.selectedWarehouse)?this.selectedWarehouse.warehouse_code:"",
-            item_code:(this.selectedItem)? this.selectedItem.item_code:"",
+            warehouse_code: this.selectedWarehouse
+              ? this.selectedWarehouse.warehouse_code
+              : "",
+            item_code: this.selectedItem ? this.selectedItem.item_code : "",
             date_start: this.period
               ? moment(this.period[0]).format("YYYY-MM-DD")
               : null,
@@ -262,15 +286,16 @@ export default {
             if (resp.data) {
               this.line.xAxis.data = resp.data.labels;
               resp.data.charts.forEach((x) => {
-                 this.line.series.push(x);
+                this.line.series.push(x);
               });
-
             } else {
               this.line.xAxis.data = [];
-              this.line.series[0].data = [];
+              this.line.series = [];
             }
             this.$vs.loading.close();
           } else {
+            this.line.xAxis.data = [];
+            this.line.series = [];
             this.$vs.loading.close();
           }
         });
@@ -279,6 +304,7 @@ export default {
   mounted() {
     this.getWarehouse();
     this.getItem();
+    // this.getChartData();
   },
   watch: {
     draw(data) {

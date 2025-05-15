@@ -194,7 +194,7 @@ export default {
   mounted() {},
   watch: {
     draw: function (newVal, oldVal) {
-      if (newVal != oldVal) {
+      if (newVal != oldVal && newVal != 0) {
         this.getData();
       }
     },

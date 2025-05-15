@@ -60,7 +60,7 @@
     <div class="vx-row">
       <div class="vx-col w-full mb-base">
         <data-table
-        :warehouseCode="(selectedWarehouse)?selectedWarehouse.warehous_code:''"
+        :warehouseCode="(selectedWarehouse)?selectedWarehouse.warehouse_code:''"
         :itemCode="(selectedItem)?selectedItem.item_code:''"
         :dateStart="(period)?period[0]:null"
         :dateEnd="(period)?period[1]:null"
