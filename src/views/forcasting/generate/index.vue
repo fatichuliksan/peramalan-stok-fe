@@ -445,6 +445,23 @@ export default {
         });
         return;
       }
+
+      // validate periode minimum 4 months
+      console.log( moment(this.period[1]).diff(moment(this.period[0]), "months"))
+      if (
+        this.period &&
+        moment(this.period[1]).diff(moment(this.period[0]), "months") < 3
+      ) {
+        this.$vs.notify({
+          title: "Error",
+          text: "Period must be at least 4 months",
+          color: "danger",
+          iconPack: "feather",
+          icon: "icon-alert-triangle",
+        });
+        return;
+      }
+
       if (!this.alpha) {
         this.$vs.notify({
           title: "Error",
