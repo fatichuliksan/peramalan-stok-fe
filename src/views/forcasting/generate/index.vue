@@ -99,7 +99,7 @@
                   >{{ mape.toFixed(2) }}% {{ mapeCriteria }}</strong
                 ></vs-chip
               >
-              <vs-chip color="danger" v-if="mapeCriteria == 'Inaccurate'"
+              <vs-chip color="danger" v-if="mapeCriteria == 'Inaccurate' || mapeCriteria == 'Invalid'"
                 ><strong
                   >{{ mape.toFixed(2) }}% {{ mapeCriteria }}</strong
                 ></vs-chip
@@ -372,7 +372,7 @@ export default {
               });
 
               this.optionWarehouse = resp.data;
-              this.selectedWarehouse = resp.data[0];
+              // this.selectedWarehouse = resp.data[0];
             } else {
               this.optionWarehouse = [];
               this.selectedWarehouse = null;
@@ -391,6 +391,7 @@ export default {
             length: 0,
             order: "name",
             sort: "asc",
+            warehouse_code: (this.selectedWarehouse) ? this.selectedWarehouse.warehouse_code : ''
           },
         })
         .then((resp) => {
@@ -401,7 +402,7 @@ export default {
               });
 
               this.optionItem = resp.data;
-              this.selectedItem = resp.data[0];
+              // this.selectedItem = resp.data[0];
             } else {
               this.optionItem = [];
               this.selectedItem = null;
@@ -643,14 +644,13 @@ export default {
   },
   mounted() {
     this.getWarehouse();
-    this.getItem();
+    // this.getItem();
   },
   watch: {
     selectedWarehouse(val) {
-      console.log(val);
+      this.getItem();
     },
     selectedItem(val) {
-      console.log(val);
     },
   },
 };

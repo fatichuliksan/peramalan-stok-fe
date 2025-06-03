@@ -191,6 +191,7 @@ export default {
             length: 0,
             order: "name",
             sort: "asc",
+            warehouse_code: (this.selectedWarehouse) ? this.selectedWarehouse.warehouse_code : ''
           },
         })
         .then((resp) => {
@@ -212,80 +213,15 @@ export default {
           }
         });
     },
-    onSearchPersonal(search, loading) {
-      if (search.length) {
-        loading(true);
-        this.searchPersonal(loading, search, this);
-      }
-    },
-    searchPersonal: _.debounce((loading, search, t) => {
-      var territorryIDs = [];
-
-      t.selectedTerritory.forEach((element) => {
-        territorryIDs.push(element.id);
-      });
-
-      t.$http
-        .get(t.baseUrl + "/sales2", {
-          params: {
-            length: 100,
-            search: search.trim(),
-            territory_ids: territorryIDs,
-          },
-        })
-        .then((resp) => {
-          if (resp.code == 200) {
-            if (resp.data.records) {
-              t.optionPersonal = resp.data.records;
-            } else {
-              t.optionPersonal = [];
-            }
-            loading(false);
-          } else {
-            t.optionPersonal = [];
-            loading(false);
-          }
-        });
-    }, 350),
-    onSearchProductTeam(search, loading) {
-      if (search.length) {
-        loading(true);
-        this.searcProductTeam(loading, search, this);
-      }
-    },
-    searcProductTeam: _.debounce((loading, search, t) => {
-      t.$http
-        .get(t.baseUrl + "/product-team", {
-          params: {
-            length: 100,
-            search: search.trim(),
-          },
-        })
-        .then((resp) => {
-          if (resp.code == 200) {
-            if (resp.data.records) {
-              resp.data.records.map(function (x) {
-                return (x.label = x.code + " " + x.name);
-              });
-              t.optionProductTeam = resp.data.records;
-            } else {
-              t.optionProductTeam = [];
-            }
-            loading(false);
-          } else {
-            t.optionProductTeam = [];
-            loading(false);
-          }
-        });
-    }, 350),
   },
   mounted() {
     this.getWarehouse();
-    this.getItem();
+    // this.getItem();
   },
   watch: {
     selectedWarehouse(val) {
       console.log(val);
+      this.getItem();
     },
     selectedItem(val) {
       console.log(val);

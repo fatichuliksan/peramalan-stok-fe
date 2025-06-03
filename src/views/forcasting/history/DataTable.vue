@@ -31,8 +31,8 @@
             {{ data[indextr].item_name }}
           </vs-td>
           <vs-td :data="data[indextr].date_start">
-            {{ data[indextr].date_start }} -
-            {{ data[indextr].date_end }}
+            {{  formatDate(data[indextr].date_start) }} -
+            {{  formatDate(data[indextr].date_end)}}
           </vs-td>
           <vs-td :data="data[indextr].alpha">
             {{ data[indextr].alpha }}
@@ -97,6 +97,9 @@ export default {
     };
   },
   methods: {
+    formatDate(date) {
+      return moment(date).format("YYYY-MM");
+    },
     tableDefaultState() {
       return {
         data: [],

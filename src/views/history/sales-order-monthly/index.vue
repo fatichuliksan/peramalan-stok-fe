@@ -202,7 +202,7 @@ export default {
               });
 
               this.optionWarehouse = resp.data;
-              this.selectedWarehouse = resp.data[0];
+              // this.selectedWarehouse = resp.data[0];
             } else {
               this.optionWarehouse = [];
               this.selectedWarehouse = null;
@@ -221,6 +221,7 @@ export default {
             length: 0,
             order: "name",
             sort: "asc",
+            warehouse_code: (this.selectedWarehouse) ? this.selectedWarehouse.warehouse_code : ''
           },
         })
         .then((resp) => {
@@ -231,7 +232,7 @@ export default {
               });
 
               this.optionItem = resp.data;
-              this.selectedItem = resp.data[0];
+              // this.selectedItem = resp.data[0];
             } else {
               this.optionItem = [];
               this.selectedItem = null;
@@ -303,13 +304,13 @@ export default {
   },
   mounted() {
     this.getWarehouse();
-    this.getItem();
-    // this.getChartData();
   },
   watch: {
     draw(data) {
-      console.log("draw", data);
       this.getChartData();
+    },
+    selectedWarehouse(val) {
+      this.getItem();
     },
   },
 };
